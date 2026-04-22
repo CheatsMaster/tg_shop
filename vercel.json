@@ -1,14 +1,6 @@
 {
-  "functions": {
-    "api/index.py": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    }
-  ]
+  "buildCommand": "mkdir -p .vercel/output/static && echo 'Crash Shop API' > .vercel/output/static/index.html",
+  "outputDirectory": ".vercel/output/static",
+  "devCommand": "echo 'Starting dev server...'",
+  "installCommand": "echo 'No install needed'"
 }

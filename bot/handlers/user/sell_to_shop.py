@@ -1,10 +1,17 @@
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from bot.services.supabase_client import SupabaseService
-from bot.services.calculation_service import CalculationService
-from bot.keyboards.user import get_servers_keyboard, get_cancel_keyboard
-from bot.config import Config
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+# Используем относительные импорты
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from services.supabase_client import SupabaseService
+from services.calculation_service import CalculationService
+from keyboards.user import get_servers_keyboard, get_cancel_keyboard
+from config import Config
 
 router = Router()
 
@@ -17,6 +24,10 @@ class SellForm(StatesGroup):
 @router.callback_query(F.data == "sell_to_shop")
 async def start_sell(callback: types.CallbackQuery, state: FSMContext):
     projects = await SupabaseService.get_projects()
+    if not projects:
+        await callback.message.edit_text("😔 Нет активных проектов для продажи.")
+        return
+    
     keyboard = get_servers_keyboard(projects, "sell_project")
     await callback.message.edit_text(
         "💰 <b>Продажа валюты магазину</b>\n\n"
@@ -96,6 +107,10 @@ async def confirm_sell(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     user = await SupabaseService.get_user(callback.from_user.id)
     
+    if not user:
+        await callback.message.edit_text("❌ Ошибка: пользователь не найден")
+        return
+    
     # Создаем заявку
     transaction = await SupabaseService.create_transaction(
         user_id=user["id"],
@@ -108,15 +123,18 @@ async def confirm_sell(callback: types.CallbackQuery, state: FSMContext):
     
     # Отправляем уведомление админам
     for admin_id in Config.ADMIN_IDS:
-        await callback.bot.send_message(
-            admin_id,
-            f"🔔 <b>Новая заявка на продажу!</b>\n\n"
-            f"👤 Пользователь: @{user['username'] or user['first_name']}\n"
-            f"🎮 {data['project_name']} - {data['server_name']}\n"
-            f"💰 Сумма: {data['amount']}\n"
-            f"💵 Итого: {data['total']} ₽\n\n"
-            f"Свяжитесь с пользователем для завершения сделки."
-        )
+        try:
+            await callback.bot.send_message(
+                admin_id,
+                f"🔔 <b>Новая заявка на продажу!</b>\n\n"
+                f"👤 Пользователь: @{user.get('username') or user.get('first_name', 'Unknown')}\n"
+                f"🎮 {data['project_name']} - {data['server_name']}\n"
+                f"💰 Сумма: {data['amount']}\n"
+                f"💵 Итого: {data['total']} ₽\n\n"
+                f"Свяжитесь с пользователем для завершения сделки."
+            )
+        except:
+            pass
     
     await callback.message.edit_text(
         "✅ <b>Заявка успешно создана!</b>\n\n"
@@ -124,3 +142,14 @@ async def confirm_sell(callback: types.CallbackQuery, state: FSMContext):
         "Спасибо, что выбрали Crash Shop! 🛍"
     )
     await state.clear()
+
+@router.callback_query(F.data == "sell_cancel")
+async def cancel_sell(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.edit_text("❌ Операция отменена")
+
+@router.callback_query(F.data == "cancel")
+async def cancel_any(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    from handlers.user.start import cmd_start
+    await cmd_start(callback.message)

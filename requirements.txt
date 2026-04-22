@@ -1,5 +1,2 @@
-aiogram==3.4.1
-supabase==2.3.0
-python-dotenv==1.0.0
-b2sdk==1.26.0
-pydantic==2.5.0
+flask==3.0.0
+flask-cors==4.0.0

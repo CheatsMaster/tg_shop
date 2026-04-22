@@ -1,8 +1,13 @@
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from bot.services.supabase_client import SupabaseService
-from bot.config import Config
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from services.supabase_client import SupabaseService
+from config import Config
 
 router = Router()
 
@@ -26,7 +31,7 @@ async def cmd_start(message: types.Message):
         ]
     ])
     
-    if user.get("role") == "admin":
+    if user and user.get("role") == "admin":
         keyboard.inline_keyboard.append([
             InlineKeyboardButton(text="⚙️ Админ-панель", callback_data="admin_panel")
         ])
