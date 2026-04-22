@@ -1,5 +1,11 @@
 import asyncio
 import logging
+import sys
+import os
+
+# Добавляем корневую директорию в PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode

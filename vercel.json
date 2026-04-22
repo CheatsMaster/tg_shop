@@ -11,21 +11,12 @@
       "destination": "/api/index.py"
     },
     {
-      "source": "/(.*)",
-      "destination": "/webapp/index.html"
-    }
-  ],
-  "builds": [
-    {
-      "src": "webapp/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "source": "/assets/(.*)",
+      "destination": "/webapp/dist/assets/$1"
     },
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+      "source": "/(.*)",
+      "destination": "/webapp/dist/index.html"
     }
   ]
 }
